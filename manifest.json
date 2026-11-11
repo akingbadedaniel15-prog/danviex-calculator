@@ -1,0 +1,19 @@
+{
+  "name": "Danviex Calculator",
+  "short_name": "Danviex Calc",
+  "description": "A professional scientific calculator by Danviex.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080d1b",
+  "theme_color": "#080d1b",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

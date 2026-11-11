@@ -1,0 +1,862 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <link rel="manifest" href="manifest.json">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Danviex Calculator</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #080d1b;
+  --panel: rgba(255,255,255,0.075);
+  --border: rgba(255,255,255,0.13);
+  --text: #ffffff;
+  --muted: #8998b5;
+  --accent: #36c9ff;
+  --accent2: #8b5cf6;
+  --button: rgba(255,255,255,0.07);
+}
+
+body.light {
+  --bg: #e9effb;
+  --panel: rgba(255,255,255,0.72);
+  --border: rgba(30,50,90,0.13);
+  --text: #17233d;
+  --muted: #63718c;
+  --button: rgba(255,255,255,0.75);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, #173c6960, transparent 35%),
+    radial-gradient(circle at 90% 80%, #6633aa40, transparent 35%),
+    var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  transition: background .3s, color .3s;
+  padding: 20px 15px 110px;
+}
+
+.app {
+  width: 100%;
+  max-width: 440px;
+  margin: auto;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.brand span {
+  color: var(--accent);
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+  letter-spacing: 2px;
+}
+
+.header-icon {
+  width: 43px;
+  height: 43px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 20px;
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 25px;
+  box-shadow: 0 12px 35px #00000020;
+}
+
+.screen {
+  display: none;
+  animation: appear .35s ease;
+}
+
+.screen.active {
+  display: block;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.display {
+  padding: 25px 20px;
+  min-height: 155px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.display-label {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+}
+
+#previous {
+  color: var(--muted);
+  font-size: 15px;
+  min-height: 22px;
+  overflow-wrap: anywhere;
+}
+
+#result {
+  font-size: clamp(30px, 9vw, 43px);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-align: right;
+  width: 100%;
+}
+
+.scientific {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.basic {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key {
+  height: 58px;
+  border-radius: 17px;
+  border: 1px solid var(--border);
+  background: var(--button);
+  color: var(--text);
+  font-size: 19px;
+  font-weight: 600;
+  transition: .15s;
+}
+
+.key:active {
+  transform: scale(.91);
+  background: var(--accent);
+}
+
+.scientific .key {
+  height: 48px;
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.key.utility {
+  color: #ff819d;
+}
+
+.key.operator {
+  background: rgba(40,145,255,.15);
+  color: var(--accent);
+}
+
+.key.equal {
+  background: linear-gradient(135deg,#168cff,#7955f5);
+  color: white;
+  border: none;
+  box-shadow: 0 5px 20px #168cff45;
+}
+
+.section-heading {
+  font-size: 22px;
+  margin: 15px 0 20px;
+}
+
+.history-item {
+  padding: 18px;
+  margin-bottom: 12px;
+  border-radius: 18px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.history-expression {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.history-answer {
+  font-size: 23px;
+  font-weight: bold;
+}
+
+.history-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.action-button {
+  padding: 12px 17px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 55px 10px;
+}
+
+.setting-card {
+  padding: 20px;
+  margin-bottom: 13px;
+}
+
+.setting-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.setting-description {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 7px;
+}
+
+.setting-control {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.setting-control button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  background: var(--button);
+  color: var(--text);
+}
+
+.setting-control button.selected {
+  background: linear-gradient(135deg,#168cff,#7955f5);
+  color: white;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(410px, calc(100% - 30px));
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 7px;
+  padding: 10px;
+  z-index: 10;
+  background: rgba(16,25,46,.78);
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 23px;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  box-shadow: 0 8px 35px #00000050;
+}
+
+body.light .bottom-nav {
+  background: rgba(255,255,255,.85);
+}
+
+.nav-button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 4px;
+  border-radius: 15px;
+  font-size: 12px;
+}
+
+.nav-button span {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+.nav-button.active {
+  background: linear-gradient(135deg,#168cff55,#7955f555);
+  color: var(--accent);
+}
+
+.footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 30px;
+  letter-spacing: 2px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+  <div>
+    <div class="brand">DANVIEX <span>CALC</span></div>
+    <div class="subtitle">SMART SCIENTIFIC CALCULATOR</div>
+  </div>
+  <button class="header-icon" id="themeIcon">☾</button>
+</header>
+
+<!-- CALCULATOR SCREEN -->
+<section class="screen active" id="calculator">
+
+  <div class="display glass">
+    <div class="display-label">CALCULATION DISPLAY</div>
+    <div id="previous"></div>
+    <div id="result">0</div>
+  </div>
+
+  <div class="scientific">
+    <button class="key" data-action="sin">sin</button>
+    <button class="key" data-action="cos">cos</button>
+    <button class="key" data-action="tan">tan</button>
+    <button class="key" data-action="sqrt">√</button>
+
+    <button class="key" data-action="square">x²</button>
+    <button class="key" data-action="power">xʸ</button>
+    <button class="key" data-action="pi">π</button>
+    <button class="key" data-action="bracket">( )</button>
+
+    <button class="key" data-action="log">log</button>
+    <button class="key" data-action="ln">ln</button>
+    <button class="key" data-action="factorial">x!</button>
+    <button class="key" data-action="reciprocal">1/x</button>
+  </div>
+
+  <div class="basic">
+    <button class="key utility" data-action="clear">AC</button>
+    <button class="key utility" data-action="delete">DEL</button>
+    <button class="key operator" data-value="%">%</button>
+    <button class="key operator" data-value="÷">÷</button>
+
+    <button class="key" data-value="7">7</button>
+    <button class="key" data-value="8">8</button>
+    <button class="key" data-value="9">9</button>
+    <button class="key operator" data-value="×">×</button>
+
+    <button class="key" data-value="4">4</button>
+    <button class="key" data-value="5">5</button>
+    <button class="key" data-value="6">6</button>
+    <button class="key operator" data-value="−">−</button>
+
+    <button class="key" data-value="1">1</button>
+    <button class="key" data-value="2">2</button>
+    <button class="key" data-value="3">3</button>
+    <button class="key operator" data-value="+">+</button>
+
+    <button class="key" data-action="sign">±</button>
+    <button class="key" data-value="0">0</button>
+    <button class="key" data-value=".">.</button>
+    <button class="key equal" data-action="equals">=</button>
+  </div>
+
+</section>
+
+<!-- HISTORY SCREEN -->
+<section class="screen" id="history-screen">
+  <h2 class="section-heading">Calculation History</h2>
+
+  <div id="history-list">
+    <div class="empty">Your calculations will appear here.</div>
+  </div>
+
+  <div class="history-actions">
+    <button class="action-button" id="clear-history">
+      Clear History
+    </button>
+  </div>
+</section>
+
+<!-- SETTINGS SCREEN -->
+<section class="screen" id="settings-screen">
+  <h2 class="section-heading">Settings</h2>
+
+  <div class="setting-card glass">
+    <div class="setting-title">Angle Mode</div>
+    <div class="setting-description">
+      Choose how trigonometric functions calculate angles.
+    </div>
+    <div class="setting-control">
+      <button id="degrees" class="selected">Degrees</button>
+      <button id="radians">Radians</button>
+    </div>
+  </div>
+
+  <div class="setting-card glass">
+    <div class="setting-title">Appearance</div>
+    <div class="setting-description">
+      Customize your calculator theme.
+    </div>
+    <div class="setting-control">
+      <button id="dark-theme" class="selected">Dark</button>
+      <button id="light-theme">Light</button>
+    </div>
+  </div>
+
+  <div class="setting-card glass">
+    <div class="setting-title">About Danviex</div>
+    <div class="setting-description">
+      Danviex Calculator — Smart mathematics, modern technology.
+      <br><br>
+      Version 1.0
+      <br>
+      Developed by Danviex Tech.
+    </div>
+  </div>
+</section>
+
+<div class="footer">POWERED BY DANVIEX TECH</div>
+
+</div>
+
+<!-- GLASS NAVIGATION -->
+<nav class="bottom-nav">
+
+  <button class="nav-button active" data-screen="calculator">
+    <span>⌗</span>
+    Calculator
+  </button>
+
+  <button class="nav-button" data-screen="history-screen">
+    <span>◷</span>
+    History
+  </button>
+
+  <button class="nav-button" data-screen="settings-screen">
+    <span>⚙</span>
+    Settings
+  </button>
+
+</nav>
+
+<script>
+
+const resultDisplay = document.getElementById("result");
+const previousDisplay = document.getElementById("previous");
+const historyList = document.getElementById("history-list");
+
+let expression = "";
+let history = [];
+let angleMode = "DEG";
+let justCalculated = false;
+
+function showResult(value) {
+  resultDisplay.textContent = value || "0";
+}
+
+function addValue(value) {
+
+  if (justCalculated && /[0-9.]/.test(value)) {
+    expression = "";
+  }
+
+  justCalculated = false;
+  expression += value;
+  showResult(expression);
+}
+
+function calculateExpression(input) {
+
+  let safe = input
+    .replace(/×/g, "*")
+    .replace(/÷/g, "/")
+    .replace(/−/g, "-")
+    .replace(/π/g, "Math.PI");
+
+  if (!/^[0-9+\-*/().%\sA-Za-z]*$/.test(safe)) {
+    throw new Error("Invalid expression");
+  }
+
+  const answer = Function(
+    '"use strict"; return (' + safe + ')'
+  )();
+
+  if (typeof answer !== "number" || !Number.isFinite(answer)) {
+    throw new Error("Math error");
+  }
+
+  return Number(answer.toPrecision(12));
+}
+
+function updateHistory(original, answer) {
+
+  history.unshift({
+    expression: original,
+    answer: answer
+  });
+
+  renderHistory();
+}
+
+function renderHistory() {
+
+  if (history.length === 0) {
+    historyList.innerHTML =
+      '<div class="empty">Your calculations will appear here.</div>';
+    return;
+  }
+
+  historyList.innerHTML = "";
+
+  history.forEach(item => {
+
+    const card = document.createElement("div");
+    card.className = "history-item glass";
+
+    const exp = document.createElement("div");
+    exp.className = "history-expression";
+    exp.textContent = item.expression + " =";
+
+    const ans = document.createElement("div");
+    ans.className = "history-answer";
+    ans.textContent = item.answer;
+
+    card.appendChild(exp);
+    card.appendChild(ans);
+
+    historyList.appendChild(card);
+
+  });
+}
+
+function performCalculation() {
+
+  if (!expression) return;
+
+  try {
+
+    const original = expression;
+    const answer = calculateExpression(expression);
+
+    updateHistory(original, answer);
+
+    previousDisplay.textContent = original + " =";
+    expression = String(answer);
+
+    showResult(expression);
+    justCalculated = true;
+
+  } catch (error) {
+
+    showResult("Error");
+    expression = "";
+    justCalculated = false;
+
+  }
+}
+
+function scientific(action) {
+
+  try {
+
+    let value;
+
+    if (action === "pi") {
+      addValue("π");
+      return;
+    }
+
+    if (!expression) return;
+
+    value = calculateExpression(expression);
+
+    let answer;
+
+    switch (action) {
+
+      case "sqrt":
+        answer = Math.sqrt(value);
+        break;
+
+      case "square":
+        answer = value ** 2;
+        break;
+
+      case "power":
+        expression += "**";
+        showResult(expression);
+        justCalculated = false;
+        return;
+
+      case "sin":
+        answer = angleMode === "DEG"
+          ? Math.sin(value * Math.PI / 180)
+          : Math.sin(value);
+        break;
+
+      case "cos":
+        answer = angleMode === "DEG"
+          ? Math.cos(value * Math.PI / 180)
+          : Math.cos(value);
+        break;
+
+      case "tan":
+        answer = angleMode === "DEG"
+          ? Math.tan(value * Math.PI / 180)
+          : Math.tan(value);
+        break;
+
+      case "log":
+        answer = Math.log10(value);
+        break;
+
+      case "ln":
+        answer = Math.log(value);
+        break;
+
+      case "reciprocal":
+        answer = 1 / value;
+        break;
+
+      case "factorial":
+
+        if (value < 0 || !Number.isInteger(value) || value > 170) {
+          throw new Error("Invalid factorial");
+        }
+
+        answer = 1;
+
+        for (let i = 2; i <= value; i++) {
+          answer *= i;
+        }
+        break;
+
+      default:
+        return;
+    }
+
+    if (!Number.isFinite(answer)) {
+      throw new Error("Math error");
+    }
+
+    const original = action + "(" + expression + ")";
+
+    answer = Number(answer.toPrecision(12));
+
+    updateHistory(original, answer);
+
+    previousDisplay.textContent = original + " =";
+    expression = String(answer);
+    showResult(expression);
+    justCalculated = true;
+
+  } catch (error) {
+
+    showResult("Error");
+    expression = "";
+    justCalculated = false;
+
+  }
+}
+
+document.querySelectorAll(".key").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    const value = button.dataset.value;
+    const action = button.dataset.action;
+
+    if (value !== undefined) {
+
+      if (value === "%") {
+        if (expression) addValue("/100");
+      } else {
+        addValue(value);
+      }
+
+      return;
+    }
+
+    switch (action) {
+
+      case "clear":
+        expression = "";
+        previousDisplay.textContent = "";
+        showResult("0");
+        justCalculated = false;
+        break;
+
+      case "delete":
+        expression = expression.slice(0, -1);
+        showResult(expression);
+        justCalculated = false;
+        break;
+
+      case "equals":
+        performCalculation();
+        break;
+
+      case "sign":
+        if (expression) {
+          expression = "-(" + expression + ")";
+          showResult(expression);
+          justCalculated = false;
+        }
+        break;
+
+      case "bracket":
+
+        const opens = (expression.match(/\(/g) || []).length;
+        const closes = (expression.match(/\)/g) || []).length;
+
+        addValue(opens > closes ? ")" : "(");
+        break;
+
+      default:
+        scientific(action);
+    }
+
+  });
+
+});
+
+// NAVIGATION
+
+document.querySelectorAll(".nav-button").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    document.querySelectorAll(".nav-button").forEach(nav => {
+      nav.classList.remove("active");
+    });
+
+    document.querySelectorAll(".screen").forEach(screen => {
+      screen.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    document.getElementById(
+      button.dataset.screen
+    ).classList.add("active");
+
+    if (button.dataset.screen === "history-screen") {
+      renderHistory();
+    }
+
+  });
+
+});
+
+// CLEAR HISTORY
+
+document.getElementById("clear-history").addEventListener("click", () => {
+
+  history = [];
+  renderHistory();
+
+});
+
+// ANGLE MODE
+
+document.getElementById("degrees").addEventListener("click", () => {
+
+  angleMode = "DEG";
+
+  document.getElementById("degrees").classList.add("selected");
+  document.getElementById("radians").classList.remove("selected");
+
+});
+
+document.getElementById("radians").addEventListener("click", () => {
+
+  angleMode = "RAD";
+
+  document.getElementById("radians").classList.add("selected");
+  document.getElementById("degrees").classList.remove("selected");
+
+});
+
+// THEMES
+
+function setTheme(theme) {
+
+  document.body.classList.toggle("light", theme === "light");
+
+  document.getElementById("dark-theme")
+    .classList.toggle("selected", theme === "dark");
+
+  document.getElementById("light-theme")
+    .classList.toggle("selected", theme === "light");
+
+  document.getElementById("themeIcon").textContent =
+    theme === "dark" ? "☾" : "☀";
+}
+
+document.getElementById("dark-theme").addEventListener("click", () => {
+  setTheme("dark");
+});
+
+document.getElementById("light-theme").addEventListener("click", () => {
+  setTheme("light");
+});
+
+document.getElementById("themeIcon").addEventListener("click", () => {
+  setTheme(
+    document.body.classList.contains("light") ? "dark" : "light"
+  );
+});
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .catch(error => console.log("Service worker error:", error));
+  });
+}
+</script>
+
+</body>
+</html>
